@@ -1,0 +1,6 @@
+[package]
+name = "conways_game_of_life"
+version = "0.1.0"
+authors = ["Alexander Thaller <alexander.thaller@trivago.com>"]
+
+[dependencies]
