@@ -1,11 +1,26 @@
 extern crate piston_window;
 extern crate rand;
+extern crate time;
 
 use piston_window::*;
 use rand::distributions::{IndependentSample, Range};
+use time::PreciseTime;
 
 const HEIGHT: u32 = 640;
 const WIDTH: u32 = 480;
+
+macro_rules! duration {
+    ($name:expr, $code:block) => (
+      let start = PreciseTime::now();
+
+      $code
+
+      let end = PreciseTime::now();
+      let duration = start.to(end);
+
+      println!("{} duration: {}", $name, duration);
+    )
+}
 
 fn main() {
     let (height_between, widht_between) = (
@@ -25,7 +40,7 @@ fn main() {
         window.draw_2d(&event, |context, graphics| {
             clear([1.0; 4], graphics);
 
-            {
+            duration!("grid_calculation", {
                 let (hpos, wpos) = {
                     (
                         height_between.ind_sample(&mut rng),
@@ -33,20 +48,22 @@ fn main() {
                     )
                 };
                 grid[hpos][wpos] = !grid[hpos][wpos];
-            }
+            });
 
-            for hpos in 1..HEIGHT as usize {
-                for wpos in 1..WIDTH as usize {
-                    if grid[hpos][wpos] {
-                        rectangle(
-                            [1.0, 0.0, 0.0, 1.0], // red
-                            [hpos as f64, wpos as f64, 1.0, 1.0],
-                            context.transform,
-                            graphics,
-                        );
+            duration!("drawing", {
+                for hpos in 1..HEIGHT as usize {
+                    for wpos in 1..WIDTH as usize {
+                        if grid[hpos][wpos] {
+                            rectangle(
+                                [1.0, 0.0, 0.0, 1.0], // red
+                                [hpos as f64, wpos as f64, 1.0, 1.0],
+                                context.transform,
+                                graphics,
+                            );
+                        }
                     }
                 }
-            }
+            });
         });
     }
 }
