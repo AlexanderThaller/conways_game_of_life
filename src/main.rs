@@ -35,10 +35,16 @@ fn main() {
         Board::new_random(rows, cols)
     };
 
-    let mut window: PistonWindow = WindowSettings::new("Hello Piston!", [HEIGHT, WIDTH])
-        .exit_on_esc(true)
-        .build()
-        .unwrap();
+
+    let mut window: PistonWindow = {
+        let opengl = OpenGL::V3_2;
+        WindowSettings::new("Conways Game of Life", [HEIGHT, WIDTH])
+            .exit_on_esc(true)
+            .opengl(opengl)
+            .samples(4)
+            .build()
+            .unwrap()
+    };
 
     while let Some(event) = window.next() {
         window.draw_2d(&event, |context, graphics| {
