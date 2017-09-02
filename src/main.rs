@@ -23,13 +23,8 @@ macro_rules! duration {
 }
 
 fn main() {
-    let (height_between, widht_between) = (
-        Range::new(0, HEIGHT as usize),
-        Range::new(0, WIDTH as usize),
-    );
-    let mut rng = rand::thread_rng();
 
-    let mut grid = vec![vec![false; WIDTH as usize]; HEIGHT as usize];
+    let mut grid = Grid::new(HEIGHT as usize, WIDTH as usize);
 
     let mut window: PistonWindow = WindowSettings::new("Hello Piston!", [HEIGHT, WIDTH])
         .exit_on_esc(true)
@@ -41,19 +36,13 @@ fn main() {
             clear([1.0; 4], graphics);
 
             duration!("grid_calculation", {
-                let (hpos, wpos) = {
-                    (
-                        height_between.ind_sample(&mut rng),
-                        widht_between.ind_sample(&mut rng),
-                    )
-                };
-                grid[hpos][wpos] = !grid[hpos][wpos];
+                grid.step()
             });
 
             duration!("drawing", {
                 for hpos in 1..HEIGHT as usize {
                     for wpos in 1..WIDTH as usize {
-                        if grid[hpos][wpos] {
+                        if grid.grid[hpos][wpos] {
                             rectangle(
                                 [1.0, 0.0, 0.0, 1.0], // red
                                 [hpos as f64, wpos as f64, 1.0, 1.0],
@@ -65,5 +54,31 @@ fn main() {
                 }
             });
         });
+    }
+}
+
+struct Grid {
+    grid: Vec<Vec<bool>>,
+}
+
+impl Grid {
+    fn new(height: usize, width: usize) -> Grid {
+        Grid { grid: vec![vec![false; width]; height] }
+    }
+
+    fn step(&mut self) {
+        let (height_between, widht_between) = (
+            Range::new(0, HEIGHT as usize),
+            Range::new(0, WIDTH as usize),
+        );
+        let mut rng = rand::thread_rng();
+
+        let (hpos, wpos) = {
+            (
+                height_between.ind_sample(&mut rng),
+                widht_between.ind_sample(&mut rng),
+            )
+        };
+        self.grid[hpos][wpos] = !self.grid[hpos][wpos];
     }
 }
