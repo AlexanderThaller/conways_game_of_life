@@ -3,6 +3,7 @@ extern crate time;
 
 mod board;
 
+use board::Cell;
 use piston_window::*;
 use time::PreciseTime;
 
@@ -57,7 +58,7 @@ fn main() {
             duration!("drawing", {
                 for row in 1..board.rows {
                     for col in 1..board.columns {
-                        if board.grid[row][col] {
+                        if board.grid[row][col] == Cell::Alive {
                             rectangle(
                                 [1.0, 0.0, 0.0, 1.0], // red
                                 [

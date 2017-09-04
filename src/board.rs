@@ -1,8 +1,16 @@
 extern crate rand;
 use board::rand::Rng;
 
+#[derive(Clone, PartialEq)]
+pub enum Cell {
+    Alive,
+    Dead,
+    Growing,
+    Dieing,
+}
+
 pub struct Board {
-    pub grid: Vec<Vec<bool>>,
+    pub grid: Vec<Vec<Cell>>,
 
     pub rows: usize,
     pub columns: usize,
@@ -11,7 +19,7 @@ pub struct Board {
 impl Board {
     pub fn new(rows: usize, columns: usize) -> Board {
         Board {
-            grid: vec![vec![false; columns]; rows],
+            grid: vec![vec![Cell::Dead; columns]; rows],
             rows: rows,
             columns: columns,
         }
@@ -22,7 +30,9 @@ impl Board {
         for hpos in 1..self.rows as usize {
             for wpos in 1..self.columns as usize {
 
-                self.grid[hpos][wpos] = rng.gen();
+                if rng.gen() {
+                    self.grid[hpos][wpos] = Cell::Alive
+                }
             }
         }
 
@@ -33,7 +43,12 @@ impl Board {
         let mut rng = rand::thread_rng();
         for hpos in 1..self.rows as usize {
             for wpos in 1..self.columns as usize {
-                self.grid[hpos][wpos] = rng.gen();
+
+                if rng.gen() {
+                    self.grid[hpos][wpos] = Cell::Alive
+                } else {
+                    self.grid[hpos][wpos] = Cell::Dead
+                }
             }
         }
     }
