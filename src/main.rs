@@ -1,9 +1,9 @@
 extern crate piston_window;
-extern crate rand;
 extern crate time;
 
+mod board;
+
 use piston_window::*;
-use rand::Rng;
 use time::PreciseTime;
 
 const HEIGHT: u32 = 1500;
@@ -32,7 +32,7 @@ fn main() {
         let (rows, cols) = (scale_dimension(HEIGHT), scale_dimension(WIDTH));
         println!("rows {}, cols {}", rows, cols);
 
-        Board::new_random(rows, cols)
+        board::Board::new(rows, cols).random()
     };
 
 
@@ -74,47 +74,5 @@ fn main() {
                 }
             });
         });
-    }
-}
-
-struct Board {
-    grid: Vec<Vec<bool>>,
-
-    rows: usize,
-    columns: usize,
-}
-
-impl Board {
-    fn new(rows: usize, columns: usize) -> Board {
-        Board {
-            grid: vec![vec![false; columns]; rows],
-            rows: rows,
-            columns: columns,
-        }
-    }
-
-    fn new_random(rows: usize, columns: usize) -> Board {
-        let mut grid = Board::new(rows, columns);
-
-        {
-            let mut rng = rand::thread_rng();
-            for hpos in 1..rows as usize {
-                for wpos in 1..columns as usize {
-
-                    grid.grid[hpos][wpos] = rng.gen();
-                }
-            }
-        }
-
-        grid
-    }
-
-    fn step(&mut self) {
-        let mut rng = rand::thread_rng();
-        for hpos in 1..self.rows as usize {
-            for wpos in 1..self.columns as usize {
-                self.grid[hpos][wpos] = rng.gen();
-            }
-        }
     }
 }
