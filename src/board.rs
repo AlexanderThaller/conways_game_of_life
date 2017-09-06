@@ -64,13 +64,58 @@ impl Board {
         self
     }
 
+    pub fn clear(mut self) -> Board {
+        for hpos in 0..self.rows as usize {
+            for wpos in 0..self.columns as usize {
+                self.grid[hpos][wpos] = Cell::Dead
+            }
+        }
+
+        self
+    }
+
     pub fn block(mut self) -> Board {
+        // @@
+        // @@
+
         self.grid[0][0] = Cell::Alive;
         self.grid[0][1] = Cell::Alive;
         self.grid[1][0] = Cell::Alive;
         self.grid[1][1] = Cell::Alive;
 
         self
+    }
+
+    pub fn glider(mut self) -> Board {
+        // #@#
+        // ##@
+        // @@@
+
+        self.grid[0][1] = Cell::Alive;
+
+        self.grid[1][2] = Cell::Alive;
+
+        self.grid[2][0] = Cell::Alive;
+        self.grid[2][1] = Cell::Alive;
+        self.grid[2][2] = Cell::Alive;
+
+        self
+    }
+
+    pub fn display(&self) -> String {
+        let mut out = String::new();
+        for hpos in 0..self.rows as usize {
+            for wpos in 0..self.columns as usize {
+                match self.grid[hpos][wpos] {
+                    Cell::Alive => out.push('@'),
+                    _ => out.push(' '),
+                }
+            }
+
+            out.push('\n');
+        }
+
+        out
     }
 
     pub fn step(&mut self) {
