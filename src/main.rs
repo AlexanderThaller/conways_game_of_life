@@ -35,6 +35,7 @@ fn main() {
     println!("");
     println!("P    : Pause/Resume simulation");
     println!("Space: Pause and step through one iteration");
+    println!("S    : Show growing/dieing cells");
     println!("D    : Display current board in terminal");
     println!("R    : Randomize board");
     println!("F    : Fill board");
@@ -61,7 +62,7 @@ fn main() {
 
         info!("Board size: {}x{}", rows, cols);
 
-        board::Board::new(rows, cols).block()
+        board::Board::new(rows, cols).random()
     };
 
 
@@ -79,8 +80,10 @@ fn main() {
     let mut texture = Texture::from_image(&mut window.factory, &canvas, &TextureSettings::new())
         .unwrap();
 
-    let mut running = false;
+    let mut running = true;
     let mut stepped = false;
+    let mut show_growing_dieing = false;
+
     while let Some(e) = window.next() {
         if let Some(button) = e.press_args() {
             match button {
@@ -93,18 +96,23 @@ fn main() {
                 Button::Keyboard(Key::G) => board = board.glider(),
                 Button::Keyboard(Key::C) => board = board.clear(),
                 Button::Keyboard(Key::B) => board = board.block(),
+                Button::Keyboard(Key::S) => show_growing_dieing = !show_growing_dieing,
                 Button::Keyboard(Key::D) => println!("{}\n", board.display()),
                 Button::Keyboard(Key::Space) => {
                     if running {
                         running = false
                     }
 
-                    if !stepped {
-                        board.step();
-                        stepped = true
+                    if show_growing_dieing {
+                        if !stepped {
+                            board.step();
+                            stepped = true
+                        } else {
+                            board.grow();
+                            stepped = false
+                        }
                     } else {
-                        board.grow();
-                        stepped = false
+                        board.step_and_grow()
                     }
                 }
                 _ => {}
@@ -116,7 +124,7 @@ fn main() {
                 for row in 0..board.rows {
                     for col in 0..board.columns {
                         let color = match board.grid[row][col] {
-                            Cell::Alive => [0, 0, 255, 255],
+                            Cell::Alive => [0, 0, 0, 255],
                             Cell::Dead => [255, 255, 255, 255],
                             Cell::Growing => [0, 255, 0, 255],
                             Cell::Dieing => [255, 0, 0, 255],
@@ -138,12 +146,16 @@ fn main() {
         if e.update_args().is_some() {
             duration!("grid_calculation", {
                 if running {
-                    if !stepped {
-                        board.step();
-                        stepped = true
+                    if show_growing_dieing {
+                        if !stepped {
+                            board.step();
+                            stepped = true;
+                        } else {
+                            board.grow();
+                            stepped = false;
+                        }
                     } else {
-                        board.grow();
-                        stepped = false
+                        board.step_and_grow()
                     }
                 }
             });

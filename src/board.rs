@@ -24,14 +24,19 @@ impl fmt::Display for Cell {
 
 impl Cell {
     pub fn is_alive(&self) -> bool {
-        let alive = if self.clone() == Cell::Alive {
-            true
-        } else {
-            false
-        };
+        match self {
+            &Cell::Alive => true,
+            _ => false,
+        }
+    }
 
-
-        alive
+    pub fn is_alive_or_dieing(&self) -> bool {
+        match self {
+            &Cell::Alive => true,
+            &Cell::Dieing => true,
+            &Cell::Growing => false,
+            &Cell::Dead => false,
+        }
     }
 }
 
@@ -127,12 +132,7 @@ impl Board {
         for hpos in 0..self.rows as usize {
             out.push('|');
             for wpos in 0..self.columns as usize {
-                match self.grid[hpos][wpos] {
-                    Cell::Alive => out.push('@'),
-                    Cell::Dead => out.push(' '),
-                    Cell::Growing => out.push('+'),
-                    Cell::Dieing => out.push('#'),
-                }
+                out.push_str(format!("{}", self.grid[hpos][wpos]).as_str());
             }
             out.push('|');
 
@@ -178,7 +178,10 @@ impl Board {
 
     fn new_cell_state(&mut self, hpos: usize, wpos: usize) -> Cell {
         let neighbors = self.get_cell_neighbors(hpos, wpos);
-        let alive_cells: Vec<_> = neighbors.iter().filter(|x| x.is_alive()).collect();
+        let alive_cells: Vec<_> = neighbors
+            .iter()
+            .filter(|x| x.is_alive_or_dieing())
+            .collect();
 
 
         let alive = alive_cells.len();
@@ -279,7 +282,7 @@ impl Board {
         };
 
         debug!(
-            "\nhpos {}, wpos {}\n --- \n|{}{}{}|\n|{}O{}|\n|{}{}{}|\n --- ",
+            "\nhpos {}, wpos {}\n --- \n|{}{}{}|\n|{}{}{}|\n|{}{}{}|\n --- ",
             hpos,
             wpos,
 
@@ -288,6 +291,7 @@ impl Board {
             north_east,
 
             west,
+                self.grid[hpos][wpos],
             east,
 
             south_west,
