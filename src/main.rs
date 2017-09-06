@@ -46,13 +46,24 @@ fn main() {
 
     let mut args = env::args();
     args.next();
-    let height: u32 = args.next().unwrap_or("100".into()).parse().unwrap_or(100);
-    let width: u32 = args.next().unwrap_or("100".into()).parse().unwrap_or(100);
-    let scale: f64 = args.next().unwrap_or("1.0".into()).parse().unwrap_or(1.0);
+    let height: u32 = args.next()
+        .unwrap_or_else(|| "100".into())
+        .parse()
+        .unwrap_or(100);
+
+    let width: u32 = args.next()
+        .unwrap_or_else(|| "100".into())
+        .parse()
+        .unwrap_or(100);
+
+    let scale: f64 = args.next()
+        .unwrap_or_else(|| "1.0".into())
+        .parse()
+        .unwrap_or(1.0);
 
     let mut board = {
         fn scale_dimension(x: u32, scale: f64) -> usize {
-            (x as f64 / scale).floor() as usize
+            (f64::from(x) / scale).floor() as usize
         }
 
         let (rows, cols) = (

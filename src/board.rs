@@ -13,29 +13,34 @@ pub enum Cell {
 
 impl fmt::Display for Cell {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            &Cell::Alive => write!(f, "{}", '@'),
-            &Cell::Dead => write!(f, "{}", ' '),
-            &Cell::Growing => write!(f, "{}", '+'),
-            &Cell::Dieing => write!(f, "{}", '#'),
+        match *self {
+            Cell::Alive => write!(f, "{}", '@'),
+            Cell::Dead => write!(f, "{}", ' '),
+            Cell::Growing => write!(f, "{}", '+'),
+            Cell::Dieing => write!(f, "{}", '#'),
         }
     }
 }
 
 impl Cell {
     pub fn is_alive(&self) -> bool {
-        match self {
-            &Cell::Alive => true,
+        match *self {
+            Cell::Alive => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_dead(&self) -> bool {
+        match *self {
+            Cell::Dead => true,
             _ => false,
         }
     }
 
     pub fn is_alive_or_dieing(&self) -> bool {
-        match self {
-            &Cell::Alive => true,
-            &Cell::Dieing => true,
-            &Cell::Growing => false,
-            &Cell::Dead => false,
+        match *self {
+            Cell::Alive | Cell::Dieing => true,
+            Cell::Dead | Cell::Growing => false,
         }
     }
 }
@@ -165,10 +170,8 @@ impl Board {
         for hpos in 0..self.rows as usize {
             for wpos in 0..self.columns as usize {
                 let new_state = match self.grid[hpos][wpos] {
-                    Cell::Growing => Cell::Alive,
-                    Cell::Dieing => Cell::Dead,
-                    Cell::Alive => Cell::Alive,
-                    Cell::Dead => Cell::Dead,
+                    Cell::Alive | Cell::Growing => Cell::Alive,
+                    Cell::Dead | Cell::Dieing => Cell::Dead,
                 };
 
                 self.grid[hpos][wpos] = new_state
@@ -187,9 +190,7 @@ impl Board {
         let alive = alive_cells.len();
 
         let curr = &self.grid[hpos][wpos];
-        let newstate = self.calculate_new_cell_state(curr, alive);
-
-        newstate
+        self.calculate_new_cell_state(curr, alive)
     }
 
     fn calculate_new_cell_state(&self, curr: &Cell, alive: usize) -> Cell {
@@ -207,10 +208,8 @@ impl Board {
             }
         }
 
-        if !curr.is_alive() {
-            if alive == 3 {
-                return Cell::Growing;
-            }
+        if curr.is_dead() && alive == 3 {
+            return Cell::Growing;
         }
 
         curr.clone()
