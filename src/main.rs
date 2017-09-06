@@ -10,11 +10,9 @@ mod board;
 
 use board::Cell;
 use piston_window::*;
+use std::env;
 use time::PreciseTime;
 
-const HEIGHT: u32 = 10;
-const WIDTH: u32 = 10;
-const SCALE: f64 = 1.0;
 
 macro_rules! duration {
     ($name:expr, $code:block) => (
@@ -25,7 +23,7 @@ macro_rules! duration {
       let end = PreciseTime::now();
       let duration = start.to(end);
 
-      debug!("{} duration: {}", $name, duration);
+      trace!("{} duration: {}", $name, duration);
     )
 }
 
@@ -45,22 +43,31 @@ fn main() {
     println!("C    : Clear the board");
     println!("");
 
+    let mut args = env::args();
+    args.next();
+    let height: u32 = args.next().unwrap_or("100".into()).parse().unwrap_or(100);
+    let width: u32 = args.next().unwrap_or("100".into()).parse().unwrap_or(100);
+    let scale: f64 = args.next().unwrap_or("1.0".into()).parse().unwrap_or(1.0);
+
     let mut board = {
-        fn scale_dimension(x: u32) -> usize {
-            (x as f64 / SCALE).floor() as usize
+        fn scale_dimension(x: u32, scale: f64) -> usize {
+            (x as f64 / scale).floor() as usize
         }
 
-        let (rows, cols) = (scale_dimension(HEIGHT), scale_dimension(WIDTH));
+        let (rows, cols) = (
+            scale_dimension(height, scale),
+            scale_dimension(width, scale),
+        );
 
         info!("Board size: {}x{}", rows, cols);
 
-        board::Board::new(rows, cols).glider()
+        board::Board::new(rows, cols).block()
     };
 
 
     let mut window: PistonWindow = {
         let opengl = OpenGL::V3_2;
-        WindowSettings::new("Conways Game of Life", [HEIGHT, WIDTH])
+        WindowSettings::new("Conways Game of Life", [height, width])
             .exit_on_esc(true)
             .opengl(opengl)
             .samples(4)
@@ -72,7 +79,8 @@ fn main() {
     let mut texture = Texture::from_image(&mut window.factory, &canvas, &TextureSettings::new())
         .unwrap();
 
-    let mut running = true;
+    let mut running = false;
+    let mut stepped = false;
     while let Some(e) = window.next() {
         if let Some(button) = e.press_args() {
             match button {
@@ -85,13 +93,19 @@ fn main() {
                 Button::Keyboard(Key::G) => board = board.glider(),
                 Button::Keyboard(Key::C) => board = board.clear(),
                 Button::Keyboard(Key::B) => board = board.block(),
-                Button::Keyboard(Key::D) => println!("Board:\n{}\n---", board.display()),
+                Button::Keyboard(Key::D) => println!("{}\n", board.display()),
                 Button::Keyboard(Key::Space) => {
                     if running {
                         running = false
                     }
 
-                    board.step()
+                    if !stepped {
+                        board.step();
+                        stepped = true
+                    } else {
+                        board.grow();
+                        stepped = false
+                    }
                 }
                 _ => {}
             }
@@ -101,10 +115,11 @@ fn main() {
             duration!("drawing", {
                 for row in 0..board.rows {
                     for col in 0..board.columns {
-                        let color = if board.grid[row][col] == Cell::Alive {
-                            [255, 0, 0, 255]
-                        } else {
-                            [255, 255, 255, 255]
+                        let color = match board.grid[row][col] {
+                            Cell::Alive => [0, 0, 255, 255],
+                            Cell::Dead => [255, 255, 255, 255],
+                            Cell::Growing => [0, 255, 0, 255],
+                            Cell::Dieing => [255, 0, 0, 255],
                         };
 
                         canvas.put_pixel(row as u32, col as u32, image::Rgba(color));
@@ -116,14 +131,20 @@ fn main() {
 
             window.draw_2d(&e, |context, graphics| {
                 clear([1.0; 4], graphics);
-                image(&texture, context.transform.scale(SCALE, SCALE), graphics);
+                image(&texture, context.transform.scale(scale, scale), graphics);
             });
         }
 
         if e.update_args().is_some() {
             duration!("grid_calculation", {
                 if running {
-                    board.step()
+                    if !stepped {
+                        board.step();
+                        stepped = true
+                    } else {
+                        board.grow();
+                        stepped = false
+                    }
                 }
             });
         }

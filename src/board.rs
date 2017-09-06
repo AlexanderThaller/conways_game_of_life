@@ -1,5 +1,7 @@
 extern crate rand;
+
 use board::rand::Rng;
+use std::fmt;
 
 #[derive(Clone, PartialEq, Debug)]
 pub enum Cell {
@@ -7,6 +9,17 @@ pub enum Cell {
     Dead,
     Growing,
     Dieing,
+}
+
+impl fmt::Display for Cell {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            &Cell::Alive => write!(f, "{}", '@'),
+            &Cell::Dead => write!(f, "{}", ' '),
+            &Cell::Growing => write!(f, "{}", '+'),
+            &Cell::Dieing => write!(f, "{}", '#'),
+        }
+    }
 }
 
 impl Cell {
@@ -104,18 +117,40 @@ impl Board {
 
     pub fn display(&self) -> String {
         let mut out = String::new();
+        out.push(' ');
+        for _ in 0..self.columns as usize {
+            out.push('-');
+        }
+        out.push(' ');
+        out.push('\n');
+
         for hpos in 0..self.rows as usize {
+            out.push('|');
             for wpos in 0..self.columns as usize {
                 match self.grid[hpos][wpos] {
                     Cell::Alive => out.push('@'),
-                    _ => out.push(' '),
+                    Cell::Dead => out.push(' '),
+                    Cell::Growing => out.push('+'),
+                    Cell::Dieing => out.push('#'),
                 }
             }
+            out.push('|');
 
             out.push('\n');
         }
 
+        out.push(' ');
+        for _ in 0..self.columns as usize {
+            out.push('-');
+        }
+        out.push(' ');
+
         out
+    }
+
+    pub fn step_and_grow(&mut self) {
+        self.step();
+        self.grow();
     }
 
     pub fn step(&mut self) {
@@ -124,7 +159,9 @@ impl Board {
                 self.grid[hpos][wpos] = self.new_cell_state(hpos, wpos)
             }
         }
+    }
 
+    pub fn grow(&mut self) {
         for hpos in 0..self.rows as usize {
             for wpos in 0..self.columns as usize {
                 let new_state = match self.grid[hpos][wpos] {
@@ -177,7 +214,6 @@ impl Board {
     }
 
     fn get_cell_neighbors(&self, hpos: usize, wpos: usize) -> Vec<Cell> {
-
         let north = {
             if hpos == 0 {
                 Cell::Dead
@@ -241,6 +277,23 @@ impl Board {
                 self.grid[hpos - 1][wpos - 1].clone()
             }
         };
+
+        debug!(
+            "\nhpos {}, wpos {}\n --- \n|{}{}{}|\n|{}O{}|\n|{}{}{}|\n --- ",
+            hpos,
+            wpos,
+
+            north_west,
+            north,
+            north_east,
+
+            west,
+            east,
+
+            south_west,
+            south,
+            south_east,
+        );
 
         vec![
             north,
