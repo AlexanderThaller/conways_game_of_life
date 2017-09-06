@@ -5,11 +5,12 @@ mod board;
 
 use board::Cell;
 use piston_window::*;
+use std::thread;
 use time::PreciseTime;
 
-const HEIGHT: u32 = 1500;
-const WIDTH: u32 = 800;
-const SCALE: f64 = 4.0;
+const HEIGHT: u32 = 1600;
+const WIDTH: u32 = 900;
+const SCALE: f64 = 2.0;
 
 macro_rules! duration {
     ($name:expr, $code:block) => (
@@ -51,10 +52,6 @@ fn main() {
         window.draw_2d(&event, |context, graphics| {
             clear([1.0; 4], graphics);
 
-            duration!("grid_calculation", {
-                board.step()
-            });
-
             duration!("drawing", {
                 for row in 1..board.rows {
                     for col in 1..board.columns {
@@ -74,6 +71,12 @@ fn main() {
                     }
                 }
             });
+
+            duration!("grid_calculation", {
+                board.step()
+            });
         });
+
+        // thread::sleep(std::time::Duration::from_millis(2000));
     }
 }
