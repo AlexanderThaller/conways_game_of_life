@@ -8,8 +8,8 @@ use piston_window::*;
 use std::thread;
 use time::PreciseTime;
 
-const HEIGHT: u32 = 1600;
-const WIDTH: u32 = 900;
+const HEIGHT: u32 = 1000;
+const WIDTH: u32 = 500;
 const SCALE: f64 = 2.0;
 
 macro_rules! duration {
@@ -32,7 +32,6 @@ fn main() {
         }
 
         let (rows, cols) = (scale_dimension(HEIGHT), scale_dimension(WIDTH));
-        println!("rows {}, cols {}", rows, cols);
 
         board::Board::new(rows, cols).random()
     };
@@ -53,8 +52,8 @@ fn main() {
             clear([1.0; 4], graphics);
 
             duration!("drawing", {
-                for row in 1..board.rows {
-                    for col in 1..board.columns {
+                for row in 0..board.rows {
+                    for col in 0..board.columns {
                         if board.grid[row][col] == Cell::Alive {
                             rectangle(
                                 [1.0, 0.0, 0.0, 1.0], // red
@@ -76,6 +75,7 @@ fn main() {
                 board.step()
             });
         });
+
 
         // thread::sleep(std::time::Duration::from_millis(2000));
     }

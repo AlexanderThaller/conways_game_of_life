@@ -11,11 +11,14 @@ pub enum Cell {
 
 impl Cell {
     pub fn is_alive(&self) -> bool {
-        if self.clone() == Cell::Alive {
+        let alive = if self.clone() == Cell::Alive {
             true
         } else {
             false
-        }
+        };
+
+
+        alive
     }
 }
 
@@ -39,8 +42,8 @@ impl Board {
 
     pub fn random(mut self) -> Board {
         let mut rng = rand::thread_rng();
-        for hpos in 1..self.rows as usize {
-            for wpos in 1..self.columns as usize {
+        for hpos in 0..self.rows as usize {
+            for wpos in 0..self.columns as usize {
 
                 if rng.gen() {
                     self.grid[hpos][wpos] = Cell::Alive
@@ -52,8 +55,8 @@ impl Board {
     }
 
     pub fn fill(mut self) -> Board {
-        for hpos in 1..self.rows as usize {
-            for wpos in 1..self.columns as usize {
+        for hpos in 0..self.rows as usize {
+            for wpos in 0..self.columns as usize {
                 self.grid[hpos][wpos] = Cell::Alive
             }
         }
@@ -61,15 +64,24 @@ impl Board {
         self
     }
 
+    pub fn block(mut self) -> Board {
+        self.grid[0][0] = Cell::Alive;
+        self.grid[0][1] = Cell::Alive;
+        self.grid[1][0] = Cell::Alive;
+        self.grid[1][1] = Cell::Alive;
+
+        self
+    }
+
     pub fn step(&mut self) {
-        for hpos in 1..self.rows as usize {
-            for wpos in 1..self.columns as usize {
+        for hpos in 0..self.rows as usize {
+            for wpos in 0..self.columns as usize {
                 self.grid[hpos][wpos] = self.new_cell_state(hpos, wpos)
             }
         }
 
-        for hpos in 1..self.rows as usize {
-            for wpos in 1..self.columns as usize {
+        for hpos in 0..self.rows as usize {
+            for wpos in 0..self.columns as usize {
                 let new_state = match self.grid[hpos][wpos] {
                     Cell::Growing => Cell::Alive,
                     Cell::Dieing => Cell::Dead,
@@ -84,17 +96,13 @@ impl Board {
 
     fn new_cell_state(&mut self, hpos: usize, wpos: usize) -> Cell {
         let neighbors = self.get_cell_neighbors(hpos, wpos);
-        let alive = neighbors.iter().filter(|x| x.is_alive()).count();
+        let alive_cells: Vec<_> = neighbors.iter().filter(|x| x.is_alive()).collect();
+
+
+        let alive = alive_cells.len();
 
         let curr = &self.grid[hpos][wpos];
         let newstate = self.calculate_new_cell_state(curr, alive);
-
-        println!(
-            "cell: {:?}, alive: {}, newstate: {:?}",
-            curr,
-            alive,
-            newstate
-        );
 
         newstate
     }
@@ -124,6 +132,7 @@ impl Board {
     }
 
     fn get_cell_neighbors(&self, hpos: usize, wpos: usize) -> Vec<Cell> {
+
         let north = {
             if hpos == 0 {
                 Cell::Dead
@@ -133,18 +142,18 @@ impl Board {
         };
 
         let north_east = {
-            if hpos == 0 || wpos == self.rows - 1 {
+            if hpos == 0 || wpos == self.columns - 1 {
                 Cell::Dead
             } else {
-                self.grid[hpos - 1][wpos - 1].clone()
+                self.grid[hpos - 1][wpos + 1].clone()
             }
         };
 
         let east = {
-            if wpos == self.rows - 1 {
+            if wpos == self.columns - 1 {
                 Cell::Dead
             } else {
-                self.grid[hpos][wpos - 1].clone()
+                self.grid[hpos][wpos + 1].clone()
             }
         };
 
