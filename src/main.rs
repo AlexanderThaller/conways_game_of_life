@@ -13,7 +13,6 @@ use piston_window::*;
 use std::env;
 use time::PreciseTime;
 
-
 macro_rules! duration {
     ($name:expr, $code:block) => (
       let start = PreciseTime::now();
@@ -23,7 +22,7 @@ macro_rules! duration {
       let end = PreciseTime::now();
       let duration = start.to(end);
 
-      trace!("{} duration: {}", $name, duration);
+      debug!("{} duration: {}", $name, duration);
     )
 }
 
@@ -131,7 +130,7 @@ fn main() {
         }
 
         if e.render_args().is_some() {
-            duration!("drawing", {
+            duration!("canvas drawing", {
                 for row in 0..board.rows {
                     for col in 0..board.columns {
                         let color = match board.grid[row][col] {
@@ -146,11 +145,15 @@ fn main() {
                 }
             });
 
-            texture.update(&mut window.encoder, &canvas).unwrap();
+            duration!("texture update", {
+                texture.update(&mut window.encoder, &canvas).unwrap();
+            });
 
-            window.draw_2d(&e, |context, graphics| {
-                clear([1.0; 4], graphics);
-                image(&texture, context.transform.scale(scale, scale), graphics);
+            duration!("window drawing", {
+                window.draw_2d(&e, |context, graphics| {
+                    clear([1.0; 4], graphics);
+                    image(&texture, context.transform.scale(scale, scale), graphics);
+                });
             });
         }
 

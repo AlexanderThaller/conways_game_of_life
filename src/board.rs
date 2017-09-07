@@ -2,6 +2,20 @@ extern crate rand;
 
 use board::rand::Rng;
 use std::fmt;
+use time::PreciseTime;
+
+macro_rules! duration {
+    ($name:expr, $code:block) => (
+      let start = PreciseTime::now();
+
+      $code
+
+      let end = PreciseTime::now();
+      let duration = start.to(end);
+
+      debug!("{} duration: {}", $name, duration);
+    )
+}
 
 #[derive(Clone, PartialEq, Debug)]
 pub enum Cell {
@@ -159,24 +173,28 @@ impl Board {
     }
 
     pub fn step(&mut self) {
-        for hpos in 0..self.rows as usize {
-            for wpos in 0..self.columns as usize {
-                self.grid[hpos][wpos] = self.new_cell_state(hpos, wpos)
+        duration!("board step", {
+            for hpos in 0..self.rows as usize {
+                for wpos in 0..self.columns as usize {
+                    self.grid[hpos][wpos] = self.new_cell_state(hpos, wpos)
+                }
             }
-        }
+        });
     }
 
     pub fn grow(&mut self) {
-        for hpos in 0..self.rows as usize {
-            for wpos in 0..self.columns as usize {
-                let new_state = match self.grid[hpos][wpos] {
-                    Cell::Alive | Cell::Growing => Cell::Alive,
-                    Cell::Dead | Cell::Dieing => Cell::Dead,
-                };
+        duration!("board grow", {
+            for hpos in 0..self.rows as usize {
+                for wpos in 0..self.columns as usize {
+                    let new_state = match self.grid[hpos][wpos] {
+                        Cell::Alive | Cell::Growing => Cell::Alive,
+                        Cell::Dead | Cell::Dieing => Cell::Dead,
+                    };
 
-                self.grid[hpos][wpos] = new_state
+                    self.grid[hpos][wpos] = new_state
+                }
             }
-        }
+        });
     }
 
     fn new_cell_state(&mut self, hpos: usize, wpos: usize) -> Cell {
@@ -186,10 +204,10 @@ impl Board {
             .filter(|x| x.is_alive_or_dieing())
             .collect();
 
-
         let alive = alive_cells.len();
 
         let curr = &self.grid[hpos][wpos];
+
         self.calculate_new_cell_state(curr, alive)
     }
 
@@ -280,7 +298,7 @@ impl Board {
             }
         };
 
-        debug!(
+        trace!(
             "\nhpos {}, wpos {}\n --- \n|{}{}{}|\n|{}{}{}|\n|{}{}{}|\n --- ",
             hpos,
             wpos,
