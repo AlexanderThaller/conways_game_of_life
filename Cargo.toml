@@ -10,3 +10,11 @@ time = "0.1"
 image = "0.15"
 log = "0.3"
 env_logger = "0.3"
+
+# Link time optimization is the only one that is not enabled by default, because
+# it increases compile time A LOT. However, it usually creates better performing
+# executables.
+[profile.release]
+# Perform LLVM link time optimizations.
+# http://llvm.org/docs/LinkTimeOptimization.html
+lto = true

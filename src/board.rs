@@ -63,24 +63,33 @@ pub type Grid = Vec<Vec<Cell>>;
 
 pub struct Board {
     pub grid: Grid,
+    mutation_factor: u32,
+
+    pub config: BoardConfiguration,
+}
+
+const MUTATION_RATE: u32 = 10;
+
+pub struct BoardConfiguration {
+    pub random_mutation: bool,
 
     pub rows: usize,
     pub columns: usize,
 }
 
 impl Board {
-    pub fn new(rows: usize, columns: usize) -> Board {
+    pub fn new(config: BoardConfiguration) -> Board {
         Board {
-            grid: vec![vec![Cell::Dead; columns]; rows],
-            rows: rows,
-            columns: columns,
+            mutation_factor: MUTATION_RATE * config.rows as u32 * config.columns as u32,
+            grid: vec![vec![Cell::Dead; config.columns]; config.rows],
+            config: config,
         }
     }
 
     pub fn random(mut self) -> Board {
         let mut rng = rand::thread_rng();
-        for hpos in 0..self.rows as usize {
-            for wpos in 0..self.columns as usize {
+        for hpos in 0..self.config.rows as usize {
+            for wpos in 0..self.config.columns as usize {
 
                 if rng.gen() {
                     self.grid[hpos][wpos] = Cell::Alive
@@ -92,8 +101,8 @@ impl Board {
     }
 
     pub fn fill(mut self) -> Board {
-        for hpos in 0..self.rows as usize {
-            for wpos in 0..self.columns as usize {
+        for hpos in 0..self.config.rows as usize {
+            for wpos in 0..self.config.columns as usize {
                 self.grid[hpos][wpos] = Cell::Alive
             }
         }
@@ -102,8 +111,8 @@ impl Board {
     }
 
     pub fn clear(mut self) -> Board {
-        for hpos in 0..self.rows as usize {
-            for wpos in 0..self.columns as usize {
+        for hpos in 0..self.config.rows as usize {
+            for wpos in 0..self.config.columns as usize {
                 self.grid[hpos][wpos] = Cell::Dead
             }
         }
@@ -142,15 +151,15 @@ impl Board {
     pub fn display(&self) -> String {
         let mut out = String::new();
         out.push(' ');
-        for _ in 0..self.columns as usize {
+        for _ in 0..self.config.columns as usize {
             out.push('-');
         }
         out.push(' ');
         out.push('\n');
 
-        for hpos in 0..self.rows as usize {
+        for hpos in 0..self.config.rows as usize {
             out.push('|');
-            for wpos in 0..self.columns as usize {
+            for wpos in 0..self.config.columns as usize {
                 out.push_str(format!("{}", self.grid[hpos][wpos]).as_str());
             }
             out.push('|');
@@ -159,7 +168,7 @@ impl Board {
         }
 
         out.push(' ');
-        for _ in 0..self.columns as usize {
+        for _ in 0..self.config.columns as usize {
             out.push('-');
         }
         out.push(' ');
@@ -174,8 +183,8 @@ impl Board {
 
     pub fn step(&mut self) {
         duration!("board step", {
-            for hpos in 0..self.rows as usize {
-                for wpos in 0..self.columns as usize {
+            for hpos in 0..self.config.rows as usize {
+                for wpos in 0..self.config.columns as usize {
                     self.grid[hpos][wpos] = self.new_cell_state(hpos, wpos)
                 }
             }
@@ -184,8 +193,8 @@ impl Board {
 
     pub fn grow(&mut self) {
         duration!("board grow", {
-            for hpos in 0..self.rows as usize {
-                for wpos in 0..self.columns as usize {
+            for hpos in 0..self.config.rows as usize {
+                for wpos in 0..self.config.columns as usize {
                     let new_state = match self.grid[hpos][wpos] {
                         Cell::Alive | Cell::Growing => Cell::Alive,
                         Cell::Dead | Cell::Dieing => Cell::Dead,
@@ -230,6 +239,14 @@ impl Board {
             return Cell::Growing;
         }
 
+        if curr.is_dead() && self.config.random_mutation {
+            let mut rng = rand::thread_rng();
+            if rng.gen_weighted_bool(self.mutation_factor) {
+                info!("random mutation");
+                return Cell::Growing;
+            }
+        }
+
         curr.clone()
     }
 
@@ -243,7 +260,7 @@ impl Board {
         };
 
         let north_east = {
-            if hpos == 0 || wpos == self.columns - 1 {
+            if hpos == 0 || wpos == self.config.columns - 1 {
                 Cell::Dead
             } else {
                 self.grid[hpos - 1][wpos + 1].clone()
@@ -251,7 +268,7 @@ impl Board {
         };
 
         let east = {
-            if wpos == self.columns - 1 {
+            if wpos == self.config.columns - 1 {
                 Cell::Dead
             } else {
                 self.grid[hpos][wpos + 1].clone()
@@ -259,7 +276,7 @@ impl Board {
         };
 
         let south_east = {
-            if hpos == self.rows - 1 || wpos == self.columns - 1 {
+            if hpos == self.config.rows - 1 || wpos == self.config.columns - 1 {
                 Cell::Dead
             } else {
                 self.grid[hpos + 1][wpos + 1].clone()
@@ -267,7 +284,7 @@ impl Board {
         };
 
         let south = {
-            if hpos == self.rows - 1 {
+            if hpos == self.config.rows - 1 {
                 Cell::Dead
             } else {
                 self.grid[hpos + 1][wpos].clone()
@@ -275,7 +292,7 @@ impl Board {
         };
 
         let south_west = {
-            if hpos == self.rows - 1 || wpos == 0 {
+            if hpos == self.config.rows - 1 || wpos == 0 {
                 Cell::Dead
             } else {
                 self.grid[hpos + 1][wpos - 1].clone()

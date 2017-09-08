@@ -36,6 +36,7 @@ fn main() {
     println!("Space: Pause and step through one iteration");
     println!("S    : Show growing/dieing cells");
     println!("D    : Display current board in terminal");
+    println!("M    : Enable random mutations");
     println!("R    : Randomize board");
     println!("F    : Fill board");
     println!("G    : Fill with single glider");
@@ -72,7 +73,13 @@ fn main() {
 
         info!("Board size: {}x{}", rows, cols);
 
-        board::Board::new(rows, cols).random()
+        let config = board::BoardConfiguration {
+            rows: rows,
+            columns: cols,
+            random_mutation: false,
+        };
+
+        board::Board::new(config).random()
     };
 
 
@@ -86,7 +93,7 @@ fn main() {
             .unwrap()
     };
 
-    let mut canvas = image::ImageBuffer::new(board.rows as u32, board.columns as u32);
+    let mut canvas = image::ImageBuffer::new(board.config.rows as u32, board.config.columns as u32);
     let mut texture = Texture::from_image(&mut window.factory, &canvas, &TextureSettings::new())
         .unwrap();
 
@@ -108,6 +115,10 @@ fn main() {
                 Button::Keyboard(Key::B) => board = board.block(),
                 Button::Keyboard(Key::S) => show_growing_dieing = !show_growing_dieing,
                 Button::Keyboard(Key::D) => println!("{}\n", board.display()),
+                Button::Keyboard(Key::M) => {
+                    board.config.random_mutation = !board.config.random_mutation;
+                    println!("random_mutation: {}", board.config.random_mutation)
+                }
                 Button::Keyboard(Key::Space) => {
                     if running {
                         running = false
@@ -131,11 +142,11 @@ fn main() {
 
         if e.render_args().is_some() {
             duration!("canvas drawing", {
-                for row in 0..board.rows {
-                    for col in 0..board.columns {
+                for row in 0..board.config.rows {
+                    for col in 0..board.config.columns {
                         let color = match board.grid[row][col] {
-                            Cell::Alive => [0, 0, 0, 255],
-                            Cell::Dead => [255, 255, 255, 255],
+                            Cell::Alive => [255, 0, 255, 255],
+                            Cell::Dead => [0, 0, 0, 255],
                             Cell::Growing => [0, 255, 0, 255],
                             Cell::Dieing => [255, 0, 0, 255],
                         };
