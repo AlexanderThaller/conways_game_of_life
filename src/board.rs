@@ -90,7 +90,6 @@ impl Board {
         let mut rng = rand::thread_rng();
         for hpos in 0..self.config.rows as usize {
             for wpos in 0..self.config.columns as usize {
-
                 if rng.gen() {
                     self.grid[hpos][wpos] = Cell::Alive
                 }
@@ -319,29 +318,19 @@ impl Board {
             "\nhpos {}, wpos {}\n --- \n|{}{}{}|\n|{}{}{}|\n|{}{}{}|\n --- ",
             hpos,
             wpos,
-
             north_west,
             north,
             north_east,
-
             west,
-                self.grid[hpos][wpos],
+            self.grid[hpos][wpos],
             east,
-
             south_west,
             south,
             south_east,
         );
 
         vec![
-            north,
-            north_east,
-            east,
-            south_east,
-            south,
-            south_west,
-            west,
-            north_west,
+            north, north_east, east, south_east, south, south_west, west, north_west
         ]
     }
 }

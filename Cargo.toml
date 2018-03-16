@@ -4,12 +4,12 @@ version = "0.1.0"
 authors = ["Alexander Thaller <alexander.thaller@trivago.com>"]
 
 [dependencies]
-piston_window = "0.70.0"
-rand = "0.3"
-time = "0.1"
-image = "0.15"
-log = "0.3"
-env_logger = "0.3"
+piston_window = "0.77.0"
+rand = "0.4.2"
+time = "0.1.39"
+image = "0.18.0"
+log = "0.4.1"
+env_logger = "0.5.5"
 
 # Link time optimization is the only one that is not enabled by default, because
 # it increases compile time A LOT. However, it usually creates better performing

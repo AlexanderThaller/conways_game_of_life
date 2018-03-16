@@ -1,10 +1,10 @@
+extern crate image;
 extern crate piston_window;
 extern crate time;
-extern crate image;
 
+extern crate env_logger;
 #[macro_use]
 extern crate log;
-extern crate env_logger;
 
 mod board;
 
@@ -27,7 +27,7 @@ macro_rules! duration {
 }
 
 fn main() {
-    env_logger::init().expect("can initialize logger");
+    env_logger::init();
 
     println!("");
     println!("Conways Game of Life");
@@ -42,6 +42,7 @@ fn main() {
     println!("G    : Fill with single glider");
     println!("B    : Fill with single block");
     println!("C    : Clear the board");
+    println!("Args: <height:100> <width:100> <scale:1.0>");
     println!("");
 
     let mut args = env::args();
@@ -82,20 +83,19 @@ fn main() {
         board::Board::new(config).random()
     };
 
-
-    let mut window: PistonWindow = {
-        let opengl = OpenGL::V3_2;
-        WindowSettings::new("Conways Game of Life", [height, width])
+    let mut window: PistonWindow = PistonWindow::new(
+        OpenGL::V3_3,
+        0,
+        WindowSettings::new("Conways Game of Life", (width, height))
             .exit_on_esc(true)
-            .opengl(opengl)
             .samples(4)
+            .srgb(false)
             .build()
-            .unwrap()
-    };
+            .expect("can not create piston window"),
+    );
 
     let mut canvas = image::ImageBuffer::new(board.config.rows as u32, board.config.columns as u32);
-    let mut texture = Texture::from_image(&mut window.factory, &canvas, &TextureSettings::new())
-        .unwrap();
+    let mut texture = Texture::from_image(&mut window.factory, &canvas, &TextureSettings::new()).unwrap();
 
     let mut running = true;
     let mut stepped = false;
